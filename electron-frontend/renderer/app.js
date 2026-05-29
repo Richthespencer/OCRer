@@ -10,7 +10,13 @@ const elements = {
     clearBtn: document.getElementById('clear-btn'),
     copyBtn: document.getElementById('copy-btn'),
     toggleRender: document.getElementById('toggle-render'),
+    historyBtn: document.getElementById('history-btn'),
     settingsBtn: document.getElementById('settings-btn'),
+
+    // 历史记录页面
+    historyList: document.getElementById('history-list'),
+    historyBackBtn: document.getElementById('history-back-btn'),
+    clearHistoryBtn: document.getElementById('clear-history-btn'),
 
     // 设置页面
     ocrProvider: document.getElementById('ocr_provider'),
@@ -277,6 +283,82 @@ function copyToClipboard() {
     });
 }
 
+// 加载历史记录
+async function loadHistory() {
+    try {
+        const history = await api.getHistory();
+
+        if (history.length === 0) {
+            elements.historyList.innerHTML = '<p class="empty-text">暂无历史记录</p>';
+            return;
+        }
+
+        elements.historyList.innerHTML = history.map(item => {
+            const time = new Date(item.timestamp).toLocaleString('zh-CN');
+            const preview = item.text.length > 100 ? item.text.substring(0, 100) + '...' : item.text;
+
+            return `
+                <div class="history-item" data-id="${item.id}" data-text="${escapeHtml(item.text)}">
+                    <div class="history-item-header">
+                        <span class="history-item-time">${time}</span>
+                        <span class="history-item-provider">${item.provider}</span>
+                    </div>
+                    <div class="history-item-preview">${escapeHtml(preview)}</div>
+                    <div class="history-item-actions">
+                        <button class="btn-small copy-history-btn">复制</button>
+                        <button class="btn-small delete-history-btn">删除</button>
+                    </div>
+                </div>
+            `;
+        }).join('');
+
+        elements.historyList.querySelectorAll('.copy-history-btn').forEach(btn => {
+            btn.addEventListener('click', (e) => {
+                e.stopPropagation();
+                const item = e.target.closest('.history-item');
+                const text = item.dataset.text;
+                navigator.clipboard.writeText(text).then(() => {
+                    showStatus('已复制到剪贴板', 'success');
+                });
+            });
+        });
+
+        elements.historyList.querySelectorAll('.delete-history-btn').forEach(btn => {
+            btn.addEventListener('click', async (e) => {
+                e.stopPropagation();
+                const item = e.target.closest('.history-item');
+                const id = parseInt(item.dataset.id);
+                await api.deleteHistory(id);
+                loadHistory();
+            });
+        });
+
+        elements.historyList.querySelectorAll('.history-item').forEach(item => {
+            item.addEventListener('click', () => {
+                const text = item.dataset.text;
+                showPage('main-page');
+                setOutputText(text);
+            });
+        });
+    } catch (err) {
+        elements.historyList.innerHTML = '<p class="empty-text">加载失败</p>';
+    }
+}
+
+function escapeHtml(text) {
+    const div = document.createElement('div');
+    div.textContent = text;
+    return div.innerHTML;
+}
+
+// 清空历史记录
+async function clearHistory() {
+    if (confirm('确定要清空所有历史记录吗？')) {
+        await api.clearHistory();
+        loadHistory();
+    }
+}
+
 // 快捷键录制
 function toggleKeyVisibility(inputEl, btnEl) {
     if (inputEl.type === 'password') {
@@ -366,8 +448,16 @@ elements.captureBtn.addEventListener('click', captureOCR);
 elements.clearBtn.addEventListener('click', clearOutput);
 elements.copyBtn.addEventListener('click', copyToClipboard);
 elements.toggleRender.addEventListener('click', toggleRender);
+elements.historyBtn.addEventListener('click', () => {
+    loadHistory();
+    showPage('history-page');
+});
 elements.settingsBtn.addEventListener('click', () => showPage('settings-page'));
 elements.autoCopy.addEventListener('change', updateAutoCopy);
+
+// 历史记录页面事件
+elements.historyBackBtn.addEventListener('click', () => showPage('main-page'));
+elements.clearHistoryBtn.addEventListener('click', clearHistory);
 
 // 设置页面事件
 elements.backBtn.addEventListener('click', () => showPage('main-page'));

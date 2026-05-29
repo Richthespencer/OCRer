@@ -208,6 +208,52 @@ ipcMain.handle('test-ocr', async () => {
     });
 });
 
+ipcMain.handle('get-history', async () => {
+    return new Promise((resolve, reject) => {
+        http.get(`${API_BASE}/api/history`, (res) => {
+            let data = '';
+            res.on('data', chunk => data += chunk);
+            res.on('end', () => resolve(JSON.parse(data)));
+        }).on('error', reject);
+    });
+});
+
+ipcMain.handle('delete-history', async (event, entryId) => {
+    return new Promise((resolve, reject) => {
+        const options = {
+            hostname: '127.0.0.1',
+            port: 51234,
+            path: `/api/history/${entryId}`,
+            method: 'DELETE'
+        };
+        const req = http.request(options, (res) => {
+            let data = '';
+            res.on('data', chunk => data += chunk);
+            res.on('end', () => resolve(JSON.parse(data)));
+        });
+        req.on('error', reject);
+        req.end();
+    });
+});
+
+ipcMain.handle('clear-history', async () => {
+    return new Promise((resolve, reject) => {
+        const options = {
+            hostname: '127.0.0.1',
+            port: 51234,
+            path: '/api/history',
+            method: 'DELETE'
+        };
+        const req = http.request(options, (res) => {
+            let data = '';
+            res.on('data', chunk => data += chunk);
+            res.on('end', () => resolve(JSON.parse(data)));
+        });
+        req.on('error', reject);
+        req.end();
+    });
+});
+
 function startPolling() {
     let lastProcessing = false;
 

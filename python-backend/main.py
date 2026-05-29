@@ -12,6 +12,7 @@ from config_manager import config, ConfigManager
 from ocr_service import recognize_text
 from paddleocr_service import recognize_text_paddleocr
 from shortcut_handler import shortcut_handler, take_screenshot
+from history_manager import history
 
 latest_result = {"text": "", "timestamp": 0, "processing": False}
 
@@ -94,6 +95,9 @@ def setup_shortcut():
             result = loop.run_until_complete(do_ocr(image_bytes))
             loop.close()
 
+            provider = config.get("ocr_provider", "siliconflow")
+            history.add(result, provider)
+
             latest_result = {
                 "text": result,
                 "timestamp": __import__('time').time(),
@@ -155,6 +159,24 @@ async def get_latest_result():
     return latest_result
 
 
+@app.get("/api/history")
+async def get_history():
+    return history.get_all()
+
+
+@app.delete("/api/history/{entry_id}")
+async def delete_history(entry_id: int):
+    if history.delete(entry_id):
+        return {"success": True}
+    raise HTTPException(status_code=404, detail="Entry not found")
+
+
+@app.delete("/api/history")
+async def clear_history():
+    history.clear()
+    return {"success": True}
+
+
 def create_test_image() -> bytes:
     img = Image.new('RGB', (400, 100), color='white')
     d = ImageDraw.Draw(img)
@@ -193,6 +215,8 @@ async def test_ocr():
             }
 
         result = await do_ocr(image_bytes)
+
+        history.add(result, provider)
 
         if config.get("auto_copy_to_clipboard", True):
             copy_to_clipboard(result)
