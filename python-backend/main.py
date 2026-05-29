@@ -41,6 +41,7 @@ class ConfigUpdate(BaseModel):
     model: Optional[str] = None
     shortcut_key: Optional[str] = None
     auto_copy_to_clipboard: Optional[bool] = None
+    hide_window_on_screenshot: Optional[bool] = None
     show_notification: Optional[bool] = None
     api_base_url: Optional[str] = None
     ocr_prompt: Optional[str] = None
@@ -86,7 +87,8 @@ def setup_shortcut():
         try:
             latest_result = {"text": latest_result.get("text", ""), "timestamp": latest_result.get("timestamp", 0), "processing": True}
 
-            image_bytes = take_screenshot()
+            hide_window = config.get("hide_window_on_screenshot", True)
+            image_bytes = take_screenshot(hide_window)
             if not image_bytes:
                 latest_result["processing"] = False
                 return
@@ -207,7 +209,8 @@ async def test_ocr():
             if not api_key:
                 raise ValueError("SiliconFlow API key not configured")
 
-        image_bytes = take_screenshot()
+        hide_window = config.get("hide_window_on_screenshot", True)
+        image_bytes = take_screenshot(hide_window)
         if not image_bytes:
             return {
                 "success": False,

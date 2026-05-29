@@ -74,13 +74,18 @@ class ShortcutHandler:
             self._listener = None
 
 
-def take_screenshot() -> bytes:
+def take_screenshot(hide_window: bool = False) -> bytes:
     with tempfile.NamedTemporaryFile(suffix=".png", delete=False) as tmp:
         tmp_path = tmp.name
 
     try:
+        cmd = ["screencapture", "-i"]
+        if hide_window:
+            cmd.append("-C")
+        cmd.append(tmp_path)
+        
         result = subprocess.run(
-            ["screencapture", "-i", tmp_path],
+            cmd,
             capture_output=True,
             text=True
         )
