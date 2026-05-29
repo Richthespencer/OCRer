@@ -79,10 +79,7 @@ def take_screenshot(hide_window: bool = False) -> bytes:
         tmp_path = tmp.name
 
     try:
-        cmd = ["screencapture", "-i"]
-        if hide_window:
-            cmd.append("-C")
-        cmd.append(tmp_path)
+        cmd = ["screencapture", "-i", tmp_path]
         
         result = subprocess.run(
             cmd,

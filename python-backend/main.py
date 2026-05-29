@@ -41,7 +41,6 @@ class ConfigUpdate(BaseModel):
     model: Optional[str] = None
     shortcut_key: Optional[str] = None
     auto_copy_to_clipboard: Optional[bool] = None
-    hide_window_on_screenshot: Optional[bool] = None
     show_notification: Optional[bool] = None
     api_base_url: Optional[str] = None
     ocr_prompt: Optional[str] = None
@@ -87,11 +86,42 @@ def setup_shortcut():
         try:
             latest_result = {"text": latest_result.get("text", ""), "timestamp": latest_result.get("timestamp", 0), "processing": True}
 
-            hide_window = config.get("hide_window_on_screenshot", True)
-            image_bytes = take_screenshot(hide_window)
+            # 检查窗口状态
+            window_was_visible = False
+            try:
+                import requests
+                resp = requests.get("http://127.0.0.1:51235/status", timeout=1)
+                status = resp.json().get("status", "hidden")
+                window_was_visible = (status == "visible")
+            except:
+                pass
+
+            # 如果窗口是显示的，隐藏它
+            if window_was_visible:
+                try:
+                    requests.post("http://127.0.0.1:51235/hide", timeout=1)
+                    import time
+                    time.sleep(0.3)
+                except:
+                    pass
+
+            image_bytes = take_screenshot()
             if not image_bytes:
+                # 如果窗口之前是显示的，恢复显示
+                if window_was_visible:
+                    try:
+                        requests.post("http://127.0.0.1:51235/show", timeout=1)
+                    except:
+                        pass
                 latest_result["processing"] = False
                 return
+
+            # 如果窗口之前是显示的，恢复显示
+            if window_was_visible:
+                try:
+                    requests.post("http://127.0.0.1:51235/show", timeout=1)
+                except:
+                    pass
 
             loop = asyncio.new_event_loop()
             result = loop.run_until_complete(do_ocr(image_bytes))
@@ -209,8 +239,7 @@ async def test_ocr():
             if not api_key:
                 raise ValueError("SiliconFlow API key not configured")
 
-        hide_window = config.get("hide_window_on_screenshot", True)
-        image_bytes = take_screenshot(hide_window)
+        image_bytes = take_screenshot()
         if not image_bytes:
             return {
                 "success": False,

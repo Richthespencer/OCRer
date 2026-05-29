@@ -9,6 +9,7 @@ let pythonProcess;
 let lastTimestamp = 0;
 
 const API_BASE = 'http://127.0.0.1:51234';
+const WINDOW_CONTROL_PORT = 51235;
 
 function isBackendRunning(callback) {
     http.get(`${API_BASE}/api/health`, (res) => {
@@ -59,6 +60,42 @@ function waitForBackend(callback, retries = 20) {
         });
     };
     check(0);
+}
+
+function startWindowControlServer() {
+    const server = http.createServer((req, res) => {
+        if (req.method === 'POST' && req.url === '/hide') {
+            if (mainWindow) {
+                mainWindow.hide();
+            }
+            res.writeHead(200, { 'Content-Type': 'application/json' });
+            res.end(JSON.stringify({ success: true }));
+        } else if (req.method === 'POST' && req.url === '/show') {
+            if (mainWindow) {
+                mainWindow.show();
+            }
+            res.writeHead(200, { 'Content-Type': 'application/json' });
+            res.end(JSON.stringify({ success: true }));
+        } else if (req.method === 'GET' && req.url === '/status') {
+            let status = 'hidden';
+            if (mainWindow) {
+                if (mainWindow.isMinimized()) {
+                    status = 'minimized';
+                } else if (mainWindow.isVisible()) {
+                    status = 'visible';
+                }
+            }
+            res.writeHead(200, { 'Content-Type': 'application/json' });
+            res.end(JSON.stringify({ status }));
+        } else {
+            res.writeHead(404);
+            res.end();
+        }
+    });
+
+    server.listen(WINDOW_CONTROL_PORT, '127.0.0.1', () => {
+        console.log(`Window control server running on port ${WINDOW_CONTROL_PORT}`);
+    });
 }
 
 function createWindow() {
@@ -120,6 +157,7 @@ function createTray() {
 
 app.whenReady().then(() => {
     startPythonBackend();
+    startWindowControlServer();
 
     waitForBackend(() => {
         createWindow();
@@ -183,6 +221,12 @@ ipcMain.handle('update-config', async (event, config) => {
 });
 
 ipcMain.handle('test-ocr', async () => {
+    // 按钮截图：隐藏窗口，截图后显示
+    if (mainWindow) {
+        mainWindow.hide();
+        await new Promise(resolve => setTimeout(resolve, 200));
+    }
+
     return new Promise((resolve, reject) => {
         const req = http.request({
             hostname: '127.0.0.1',
@@ -194,6 +238,9 @@ ipcMain.handle('test-ocr', async () => {
             let data = '';
             res.on('data', chunk => data += chunk);
             res.on('end', () => {
+                if (mainWindow) {
+                    mainWindow.show();
+                }
                 try {
                     resolve(JSON.parse(data));
                 } catch (e) {
@@ -202,7 +249,12 @@ ipcMain.handle('test-ocr', async () => {
             });
         });
 
-        req.on('error', reject);
+        req.on('error', (err) => {
+            if (mainWindow) {
+                mainWindow.show();
+            }
+            reject(err);
+        });
         req.write(JSON.stringify({}));
         req.end();
     });

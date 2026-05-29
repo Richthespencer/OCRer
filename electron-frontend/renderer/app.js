@@ -6,7 +6,6 @@ const elements = {
     outputRendered: document.getElementById('output-rendered'),
     status: document.getElementById('status'),
     autoCopy: document.getElementById('auto_copy'),
-    hideWindow: document.getElementById('hide_window'),
     captureBtn: document.getElementById('capture-btn'),
     clearBtn: document.getElementById('clear-btn'),
     copyBtn: document.getElementById('copy-btn'),
@@ -111,7 +110,6 @@ async function loadConfig() {
 
         // 主页面设置
         elements.autoCopy.checked = config.auto_copy_to_clipboard !== false;
-        elements.hideWindow.checked = config.hide_window_on_screenshot !== false;
 
         // 设置页面
         elements.ocrProvider.value = config.ocr_provider || 'siliconflow';
@@ -155,7 +153,6 @@ async function saveConfig() {
         paddleocr_model: elements.paddleocrModel.value,
         shortcut_key: elements.shortcutKey.value,
         auto_copy_to_clipboard: elements.autoCopy.checked,
-        hide_window_on_screenshot: elements.hideWindow.checked,
         show_notification: elements.showNotification.checked,
         ocr_prompt: elements.ocrPrompt.value
     };
@@ -174,15 +171,6 @@ async function updateAutoCopy() {
         await api.updateConfig({ auto_copy_to_clipboard: elements.autoCopy.checked });
     } catch (err) {
         console.error('Failed to update auto copy:', err);
-    }
-}
-
-// 更新截图时隐藏窗口设置
-async function updateHideWindow() {
-    try {
-        await api.updateConfig({ hide_window_on_screenshot: elements.hideWindow.checked });
-    } catch (err) {
-        console.error('Failed to update hide window:', err);
     }
 }
 
@@ -466,7 +454,6 @@ elements.historyBtn.addEventListener('click', () => {
 });
 elements.settingsBtn.addEventListener('click', () => showPage('settings-page'));
 elements.autoCopy.addEventListener('change', updateAutoCopy);
-elements.hideWindow.addEventListener('change', updateHideWindow);
 
 // 历史记录页面事件
 elements.historyBackBtn.addEventListener('click', () => showPage('main-page'));

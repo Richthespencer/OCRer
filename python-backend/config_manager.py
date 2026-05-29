@@ -9,7 +9,6 @@ DEFAULT_CONFIG = {
     "model": "deepseek-ai/DeepSeek-OCR",
     "shortcut_key": "cmd+shift+o",
     "auto_copy_to_clipboard": True,
-    "hide_window_on_screenshot": True,
     "show_notification": True,
     "api_base_url": "https://api.siliconflow.cn/v1",
     "ocr_prompt": "Convert the document to markdown format. Preserve mathematical formulas in LaTeX notation using $ for inline and $$ for block formulas. Do not include bounding boxes or layout annotations.",
