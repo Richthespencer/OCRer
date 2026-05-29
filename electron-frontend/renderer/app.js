@@ -489,6 +489,11 @@ api.onOCRProcessing((processing) => {
     }
 });
 
+// 监听截图完成事件
+api.onScreenshotDone(() => {
+    showStatus('识别中...', 'processing');
+});
+
 // 监听快捷键触发的OCR结果
 api.onOCRResult((text) => {
     setOutputText(text);

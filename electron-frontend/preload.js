@@ -8,5 +8,6 @@ contextBridge.exposeInMainWorld('electronAPI', {
     deleteHistory: (entryId) => ipcRenderer.invoke('delete-history', entryId),
     clearHistory: () => ipcRenderer.invoke('clear-history'),
     onOCRResult: (callback) => ipcRenderer.on('ocr-result', (event, text) => callback(text)),
-    onOCRProcessing: (callback) => ipcRenderer.on('ocr-processing', (event, processing) => callback(processing))
+    onOCRProcessing: (callback) => ipcRenderer.on('ocr-processing', (event, processing) => callback(processing)),
+    onScreenshotDone: (callback) => ipcRenderer.on('screenshot-done', () => callback())
 });

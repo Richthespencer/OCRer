@@ -93,6 +93,9 @@ function startWindowControlServer() {
         } else if (req.method === 'POST' && req.url === '/show') {
             if (mainWindow) {
                 mainWindow.show();
+                mainWindow.focus();
+                // 通知前端截图已完成，开始识别
+                mainWindow.webContents.send('screenshot-done');
             }
             res.writeHead(200, { 'Content-Type': 'application/json' });
             res.end(JSON.stringify({ success: true }));

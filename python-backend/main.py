@@ -86,29 +86,7 @@ def setup_shortcut():
         try:
             latest_result = {"text": latest_result.get("text", ""), "timestamp": latest_result.get("timestamp", 0), "processing": True}
 
-            # 检查窗口状态，如果窗口是显示的，隐藏它
-            window_was_visible = False
-            try:
-                import requests
-                resp = requests.get("http://127.0.0.1:51235/status", timeout=1)
-                status = resp.json().get("status", "hidden")
-                if status == "visible":
-                    window_was_visible = True
-                    requests.post("http://127.0.0.1:51235/hide", timeout=1)
-                    import time
-                    time.sleep(0.3)
-            except:
-                pass
-
             image_bytes = take_screenshot()
-            
-            # 无论截图成功与否，都恢复窗口显示
-            if window_was_visible:
-                try:
-                    import requests
-                    requests.post("http://127.0.0.1:51235/show", timeout=1)
-                except:
-                    pass
             
             if not image_bytes:
                 latest_result["processing"] = False
