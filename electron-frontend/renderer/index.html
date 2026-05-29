@@ -1,0 +1,152 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>OCRer</title>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/katex.min.css">
+    <link rel="stylesheet" href="style.css">
+    <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/katex.min.js"></script>
+</head>
+<body>
+    <div class="container">
+        <!-- 主页面 -->
+        <div id="main-page" class="page active">
+            <header>
+                <h1>OCRer</h1>
+                <p class="subtitle">截图识别文字工具</p>
+            </header>
+
+            <div class="card output-card">
+                <div class="output-header">
+                    <h2>识别结果</h2>
+                    <div class="output-actions">
+                        <button id="toggle-render" class="btn-small" title="切换渲染/源码">源码</button>
+                        <button id="copy-btn" class="btn-small" title="复制到剪贴板">复制</button>
+                        <button id="clear-btn" class="btn-small" title="清空内容">清空</button>
+                    </div>
+                </div>
+                <div id="output-container">
+                    <textarea id="output" placeholder="点击「开始截图」或使用快捷键 (⌘⇧O) 进行截图识别..." readonly></textarea>
+                    <div id="output-rendered" class="markdown-body"><span class="placeholder-text">点击「开始截图」或使用快捷键 (⌘⇧O) 进行截图识别...</span></div>
+                </div>
+            </div>
+
+            <div class="card status-card">
+                <div id="status" class="status">就绪</div>
+            </div>
+
+            <div class="card controls-card">
+                <div class="control-row">
+                    <label class="switch-label">
+                        <input type="checkbox" id="auto_copy" checked>
+                        <span>自动复制到剪贴板</span>
+                    </label>
+                </div>
+            </div>
+
+            <div class="actions">
+                <button id="capture-btn" class="btn primary">开始截图</button>
+                <button id="settings-btn" class="btn">设置</button>
+            </div>
+        </div>
+
+        <!-- 设置页面 -->
+        <div id="settings-page" class="page">
+            <header>
+                <div class="header-with-back">
+                    <button id="back-btn" class="btn-icon">&larr;</button>
+                    <h1>设置</h1>
+                </div>
+            </header>
+
+            <div class="card">
+                <h2>OCR 服务</h2>
+                <div class="form-group">
+                    <label for="ocr_provider">服务提供商</label>
+                    <select id="ocr_provider">
+                        <option value="siliconflow">硅基流动 (SiliconFlow)</option>
+                        <option value="paddleocr">PaddleOCR (百度AI Studio)</option>
+                    </select>
+                </div>
+
+                <div id="siliconflow-config">
+                    <div class="form-group">
+                        <label for="api_key">API Key</label>
+                        <input type="password" id="api_key" placeholder="输入你的硅基流动 API Key">
+                        <button id="toggle-key" class="btn-small">显示</button>
+                    </div>
+                    <div class="form-group">
+                        <label for="api_base_url">API 地址</label>
+                        <input type="text" id="api_base_url" placeholder="https://api.siliconflow.cn/v1">
+                    </div>
+                    <div class="form-group">
+                        <label for="model">模型</label>
+                        <select id="model">
+                            <option value="deepseek-ai/DeepSeek-OCR">DeepSeek-OCR</option>
+                            <option value="zai-org/GLM-4.6V">GLM-4.6V</option>
+                            <option value="Qwen/Qwen2.5-VL-7B-Instruct">Qwen2.5-VL-7B</option>
+                        </select>
+                    </div>
+                </div>
+
+                <div id="paddleocr-config" class="hidden">
+                    <div class="form-group">
+                        <label for="paddleocr_api_url">API URL</label>
+                        <input type="text" id="paddleocr_api_url" placeholder="https://paddleocr.aistudio-app.com/api/v2/ocr/jobs">
+                    </div>
+                    <div class="form-group">
+                        <label for="paddleocr_token">访问令牌</label>
+                        <input type="password" id="paddleocr_token" placeholder="输入你的AI Studio访问令牌">
+                        <button id="toggle-paddle-token" class="btn-small">显示</button>
+                    </div>
+                    <div class="form-group">
+                        <label for="paddleocr_model">模型</label>
+                    <select id="paddleocr_model">
+                        <option value="PaddleOCR-VL-1.6">PaddleOCR-VL-1.6</option>
+                        <option value="PaddleOCR-VL-1.5">PaddleOCR-VL-1.5</option>
+                        <option value="PaddleOCR-VL">PaddleOCR-VL</option>
+                        <option value="PP-OCRv5">PP-OCRv5</option>
+                        <option value="PP-StructureV3">PP-StructureV3</option>
+                    </select>
+                    </div>
+                    <p class="hint">访问 <a href="https://aistudio.baidu.com/paddleocr/task" target="_blank">PaddleOCR官网</a> 获取访问令牌</p>
+                </div>
+            </div>
+
+            <div class="card">
+                <h2>快捷键</h2>
+                <div class="form-group">
+                    <label for="shortcut_key">截图快捷键</label>
+                    <input type="text" id="shortcut_key" placeholder="cmd+shift+o" readonly>
+                    <button id="record-shortcut" class="btn-small">录制</button>
+                </div>
+                <p class="hint">点击"录制"按钮后，按下你想要的快捷键组合</p>
+            </div>
+
+            <div class="card">
+                <h2>其他设置</h2>
+                <div class="form-group checkbox">
+                    <input type="checkbox" id="show_notification" checked>
+                    <label for="show_notification">显示系统通知</label>
+                </div>
+            </div>
+
+            <div class="card">
+                <h2>OCR 提示词</h2>
+                <div class="form-group">
+                    <textarea id="ocr_prompt" rows="3" placeholder="请识别图片中的所有文字"></textarea>
+                </div>
+            </div>
+
+            <div class="actions">
+                <button id="save-btn" class="btn primary">保存设置</button>
+                <button id="test-btn" class="btn">测试 OCR</button>
+            </div>
+        </div>
+    </div>
+
+    <script src="app.js"></script>
+</body>
+</html>

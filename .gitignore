@@ -1,0 +1,33 @@
+# Python
+venv/
+__pycache__/
+*.pyc
+*.pyo
+*.egg-info/
+dist/
+build/
+
+# Node.js
+node_modules/
+package-lock.json
+
+# Config with secrets
+config.json
+
+# Logs
+*.log
+python.log
+
+# OS
+.DS_Store
+Thumbs.db
+
+# IDE
+.vscode/
+.idea/
+
+# Test files
+test_*.py
+test_*.html
+test_*.png
+.agent-screenshots/

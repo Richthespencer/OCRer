@@ -1,0 +1,14 @@
+{
+  "ocr_provider": "paddleocr",
+  "api_key": "",
+  "model": "deepseek-ai/DeepSeek-OCR",
+  "shortcut_key": "cmd+shift+o",
+  "auto_copy_to_clipboard": true,
+  "show_notification": true,
+  "api_base_url": "https://api.siliconflow.cn/v1",
+  "ocr_prompt": "请识别图片中的所有文字，直接返回识别结果，不要添加任何额外说明",
+  "paddleocr_api_url": "https://paddleocr.aistudio-app.com/api/v2/ocr/jobs",
+  "paddleocr_token": "",
+  "paddleocr_model": "PaddleOCR-VL-1.6",
+  "port": 51234
+}

@@ -1,0 +1,13 @@
+{
+  "name": "ocrer",
+  "version": "1.0.0",
+  "description": "OCR tool with SiliconFlow API",
+  "main": "main.js",
+  "scripts": {
+    "start": "electron .",
+    "dev": "electron . --dev"
+  },
+  "devDependencies": {
+    "electron": "^32.0.0"
+  }
+}

@@ -1,0 +1,61 @@
+import json
+import os
+from pathlib import Path
+from typing import Optional
+
+DEFAULT_CONFIG = {
+    "ocr_provider": "siliconflow",
+    "api_key": "",
+    "model": "deepseek-ai/DeepSeek-OCR",
+    "shortcut_key": "cmd+shift+o",
+    "auto_copy_to_clipboard": True,
+    "show_notification": True,
+    "api_base_url": "https://api.siliconflow.cn/v1",
+    "ocr_prompt": "请识别图片中的所有文字，直接返回识别结果，不要添加任何额外说明",
+    "paddleocr_api_url": "https://paddleocr.aistudio-app.com/api/v2/ocr/jobs",
+    "paddleocr_token": "",
+    "paddleocr_model": "PaddleOCR-VL-1.6",
+    "port": 51234
+}
+
+
+class ConfigManager:
+    def __init__(self, config_path: Optional[str] = None):
+        if config_path is None:
+            config_path = Path(__file__).parent.parent / "config.json"
+        self.config_path = Path(config_path)
+        self._config = self._load_config()
+
+    def _load_config(self) -> dict:
+        if self.config_path.exists():
+            try:
+                with open(self.config_path, "r", encoding="utf-8") as f:
+                    saved = json.load(f)
+                    config = DEFAULT_CONFIG.copy()
+                    config.update(saved)
+                    return config
+            except (json.JSONDecodeError, IOError):
+                return DEFAULT_CONFIG.copy()
+        return DEFAULT_CONFIG.copy()
+
+    def _save_config(self):
+        self.config_path.parent.mkdir(parents=True, exist_ok=True)
+        with open(self.config_path, "w", encoding="utf-8") as f:
+            json.dump(self._config, f, indent=2, ensure_ascii=False)
+
+    def get(self, key: str, default=None):
+        return self._config.get(key, default)
+
+    def set(self, key: str, value):
+        self._config[key] = value
+        self._save_config()
+
+    def update(self, data: dict):
+        self._config.update(data)
+        self._save_config()
+
+    def get_all(self) -> dict:
+        return self._config.copy()
+
+
+config = ConfigManager()
