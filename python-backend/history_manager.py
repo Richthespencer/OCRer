@@ -1,14 +1,32 @@
 import json
 import os
+import sys
 from pathlib import Path
 from datetime import datetime
 from typing import List, Optional
 
 
+def get_config_dir():
+    """获取配置文件目录，打包后使用用户目录"""
+    if getattr(sys, 'frozen', False):
+        # 打包后的可执行文件
+        if sys.platform == 'darwin':
+            config_dir = Path.home() / "Library" / "Application Support" / "OCRer"
+        elif sys.platform == 'win32':
+            config_dir = Path(os.environ.get('APPDATA', '')) / "OCRer"
+        else:
+            config_dir = Path.home() / ".config" / "ocrer"
+    else:
+        # 开发模式
+        config_dir = Path(__file__).parent.parent
+    config_dir.mkdir(parents=True, exist_ok=True)
+    return config_dir
+
+
 class HistoryManager:
     def __init__(self, history_path: Optional[str] = None):
         if history_path is None:
-            history_path = Path(__file__).parent.parent / "history.json"
+            history_path = get_config_dir() / "history.json"
         self.history_path = Path(history_path)
         self._history = self._load_history()
 

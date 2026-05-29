@@ -1,5 +1,6 @@
 import json
 import os
+import sys
 from pathlib import Path
 from typing import Optional
 
@@ -18,11 +19,27 @@ DEFAULT_CONFIG = {
     "port": 51234
 }
 
+def get_config_dir():
+    """获取配置文件目录，打包后使用用户目录"""
+    if getattr(sys, 'frozen', False):
+        # 打包后的可执行文件
+        if sys.platform == 'darwin':
+            config_dir = Path.home() / "Library" / "Application Support" / "OCRer"
+        elif sys.platform == 'win32':
+            config_dir = Path(os.environ.get('APPDATA', '')) / "OCRer"
+        else:
+            config_dir = Path.home() / ".config" / "ocrer"
+    else:
+        # 开发模式
+        config_dir = Path(__file__).parent.parent
+    config_dir.mkdir(parents=True, exist_ok=True)
+    return config_dir
+
 
 class ConfigManager:
     def __init__(self, config_path: Optional[str] = None):
         if config_path is None:
-            config_path = Path(__file__).parent.parent / "config.json"
+            config_path = get_config_dir() / "config.json"
         self.config_path = Path(config_path)
         self._config = self._load_config()
 
