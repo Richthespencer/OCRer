@@ -24,9 +24,9 @@ def get_config_dir():
     if getattr(sys, 'frozen', False):
         # 打包后的可执行文件
         if sys.platform == 'darwin':
-            config_dir = Path.home() / "Library" / "Application Support" / "OCRer"
+            config_dir = Path.home() / "Library" / "Application Support" / "ocrer"
         elif sys.platform == 'win32':
-            config_dir = Path(os.environ.get('APPDATA', '')) / "OCRer"
+            config_dir = Path(os.environ.get('APPDATA', '')) / "ocrer"
         else:
             config_dir = Path.home() / ".config" / "ocrer"
     else:
