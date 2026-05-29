@@ -12,7 +12,7 @@ from PIL import Image, ImageDraw, ImageFont
 from config_manager import config, ConfigManager
 from ocr_service import recognize_text
 from paddleocr_service import recognize_text_paddleocr
-from shortcut_handler import shortcut_handler, take_screenshot
+from shortcut_handler import take_screenshot
 from history_manager import history
 from task_manager import task_manager
 
@@ -22,9 +22,7 @@ current_task_id = None
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
-    setup_shortcut()
     yield
-    shortcut_handler.stop()
 
 
 app = FastAPI(title="OCRer API", lifespan=lifespan)
@@ -81,46 +79,6 @@ async def do_ocr(image_bytes: bytes, prompt: Optional[str] = None) -> str:
         return await recognize_text(image_bytes, prompt)
 
 
-def setup_shortcut():
-    shortcut_key = config.get("shortcut_key", "cmd+shift+o")
-
-    def on_shortcut():
-        global latest_result
-        try:
-            latest_result = {"text": latest_result.get("text", ""), "timestamp": latest_result.get("timestamp", 0), "processing": True}
-
-            image_bytes = take_screenshot()
-            
-            if not image_bytes:
-                latest_result["processing"] = False
-                return
-
-            loop = asyncio.new_event_loop()
-            result = loop.run_until_complete(do_ocr(image_bytes))
-            loop.close()
-
-            provider = config.get("ocr_provider", "siliconflow")
-            history.add(result, provider)
-
-            latest_result = {
-                "text": result,
-                "timestamp": __import__('time').time(),
-                "processing": False
-            }
-
-            if config.get("auto_copy_to_clipboard", True):
-                copy_to_clipboard(result)
-
-            if config.get("show_notification", True):
-                show_notification("OCRer", "识别完成，结果已复制到剪贴板")
-
-        except Exception as e:
-            latest_result["processing"] = False
-            show_notification("OCRer 错误", str(e))
-
-    shortcut_handler.set_shortcut(shortcut_key, on_shortcut)
-
-
 @app.get("/api/config")
 async def get_config():
     return config.get_all()
@@ -130,7 +88,6 @@ async def get_config():
 async def update_config(updates: ConfigUpdate):
     data = {k: v for k, v in updates.model_dump().items() if v is not None}
     config.update(data)
-    setup_shortcut()
     return config.get_all()
 
 

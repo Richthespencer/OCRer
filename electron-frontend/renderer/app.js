@@ -513,6 +513,11 @@ api.onScreenshotDone(() => {
     showStatus('识别中...', 'processing');
 });
 
+// 监听快捷键触发截图
+api.onTriggerCapture(() => {
+    captureOCR();
+});
+
 // 监听快捷键触发的OCR结果
 api.onOCRResult((text) => {
     setOutputText(text);

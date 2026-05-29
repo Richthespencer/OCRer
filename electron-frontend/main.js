@@ -1,4 +1,4 @@
-const { app, BrowserWindow, ipcMain, Tray, Menu, nativeImage } = require('electron');
+const { app, BrowserWindow, ipcMain, Tray, Menu, nativeImage, globalShortcut } = require('electron');
 const path = require('path');
 const { spawn } = require('child_process');
 const http = require('http');
@@ -80,6 +80,73 @@ function waitForBackend(callback, retries = 20) {
         });
     };
     check(0);
+}
+
+function convertShortcutForElectron(shortcut) {
+    // 将 cmd+shift+o 转换为 CommandOrControl+Shift+O
+    const parts = shortcut.toLowerCase().split('+').map(s => s.trim());
+    const result = [];
+    
+    for (const part of parts) {
+        if (part === 'cmd' || part === 'command') {
+            result.push('CommandOrControl');
+        } else if (part === 'ctrl' || part === 'control') {
+            result.push('CommandOrControl');
+        } else if (part === 'alt' || part === 'option') {
+            result.push('Alt');
+        } else if (part === 'shift') {
+            result.push('Shift');
+        } else if (part.length === 1) {
+            result.push(part.toUpperCase());
+        } else {
+            result.push(part);
+        }
+    }
+    
+    return result.join('+');
+}
+
+function registerGlobalShortcut() {
+    // 先注销所有快捷键
+    globalShortcut.unregisterAll();
+    
+    // 获取配置的快捷键
+    http.get(`${API_BASE}/api/config`, (res) => {
+        let data = '';
+        res.on('data', chunk => data += chunk);
+        res.on('end', () => {
+            try {
+                const config = JSON.parse(data);
+                const shortcut = config.shortcut_key || 'cmd+shift+o';
+                const electronShortcut = convertShortcutForElectron(shortcut);
+                
+                console.log(`Registering shortcut: ${electronShortcut}`);
+                
+                const ret = globalShortcut.register(electronShortcut, () => {
+                    console.log('Shortcut triggered');
+                    // 触发截图OCR
+                    triggerShortcutOCR();
+                });
+                
+                if (ret) {
+                    console.log('Shortcut registered successfully');
+                } else {
+                    console.log('Shortcut registration failed');
+                }
+            } catch (e) {
+                console.error('Failed to register shortcut:', e);
+            }
+        });
+    }).on('error', (err) => {
+        console.error('Failed to get config for shortcut:', err);
+    });
+}
+
+function triggerShortcutOCR() {
+    // 通知前端触发截图
+    if (mainWindow) {
+        mainWindow.webContents.send('trigger-capture');
+    }
 }
 
 function startWindowControlServer() {
@@ -186,7 +253,12 @@ app.whenReady().then(() => {
         createWindow();
         createTray();
         startPolling();
+        registerGlobalShortcut();
     });
+});
+
+app.on('will-quit', () => {
+    globalShortcut.unregisterAll();
 });
 
 app.on('window-all-closed', () => {
@@ -234,7 +306,11 @@ ipcMain.handle('update-config', async (event, config) => {
         const req = http.request(options, (res) => {
             let body = '';
             res.on('data', chunk => body += chunk);
-            res.on('end', () => resolve(JSON.parse(body)));
+            res.on('end', () => {
+                // 配置更新后重新注册快捷键
+                registerGlobalShortcut();
+                resolve(JSON.parse(body));
+            });
         });
 
         req.on('error', reject);
