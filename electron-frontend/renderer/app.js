@@ -112,7 +112,7 @@ async function loadConfig() {
         elements.autoCopy.checked = config.auto_copy_to_clipboard !== false;
 
         // 设置页面
-        elements.ocrProvider.value = config.ocr_provider || 'siliconflow';
+        elements.ocrProvider.value = config.ocr_provider || 'paddleocr';
         elements.apiKey.value = config.api_key || '';
         elements.apiBaseUrl.value = config.api_base_url || 'https://api.siliconflow.cn/v1';
         elements.model.value = config.model || 'deepseek-ai/DeepSeek-OCR';

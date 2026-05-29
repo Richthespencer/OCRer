@@ -5,7 +5,7 @@ from pathlib import Path
 from typing import Optional
 
 DEFAULT_CONFIG = {
-    "ocr_provider": "siliconflow",
+    "ocr_provider": "paddleocr",
     "api_key": "",
     "model": "deepseek-ai/DeepSeek-OCR",
     "shortcut_key": "cmd+shift+o",

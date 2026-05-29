@@ -27,14 +27,6 @@ cd ../electron-frontend && npm install
 
 ## OCR 服务
 
-**硅基流动** - 注册 [cloud.siliconflow.cn](https://cloud.siliconflow.cn/) 获取 API Key
-
-| 模型 | 说明 |
-|------|------|
-| deepseek-ai/DeepSeek-OCR | DeepSeek OCR |
-| zai-org/GLM-4.6V | 智谱视觉模型 |
-| Qwen/Qwen2.5-VL-7B-Instruct | 通义千问 |
-
 **PaddleOCR** - 访问 [aistudio.baidu.com/paddleocr/task](https://aistudio.baidu.com/paddleocr/task) 获取令牌
 
 | 模型 | 说明 |
@@ -42,6 +34,14 @@ cd ../electron-frontend && npm install
 | PaddleOCR-VL-1.6 | 最新版（默认） |
 | PaddleOCR-VL-1.5 | 稳定版 |
 | PP-OCRv5 | 轻量版 |
+
+**硅基流动** - 注册 [cloud.siliconflow.cn](https://cloud.siliconflow.cn/) 获取 API Key
+
+| 模型 | 说明 |
+|------|------|
+| deepseek-ai/DeepSeek-OCR | DeepSeek OCR |
+| zai-org/GLM-4.6V | 智谱视觉模型 |
+| Qwen/Qwen2.5-VL-7B-Instruct | 通义千问 |
 
 ## 使用
 
