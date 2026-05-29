@@ -231,9 +231,11 @@ async function captureOCR() {
 // 取消OCR
 async function cancelOCR() {
     try {
-        const result = await api.cancelOCR();
+        await api.cancelOCR();
         elements.cancelBtn.classList.add('hidden');
-        showStatus(result.message || '已取消', 'info');
+        elements.captureBtn.disabled = false;
+        elements.captureBtn.textContent = '开始截图';
+        showStatus('已取消，任务在后台继续', 'info');
     } catch (err) {
         showStatus('取消失败: ' + err.message, 'error');
     }
