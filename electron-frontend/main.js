@@ -278,6 +278,43 @@ ipcMain.handle('test-ocr', async () => {
     });
 });
 
+ipcMain.handle('cancel-ocr', async () => {
+    return new Promise((resolve, reject) => {
+        const req = http.request({
+            hostname: '127.0.0.1',
+            port: 51234,
+            path: '/api/cancel-ocr',
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' }
+        }, (res) => {
+            let data = '';
+            res.on('data', chunk => data += chunk);
+            res.on('end', () => {
+                // 确保窗口显示
+                if (mainWindow) {
+                    mainWindow.show();
+                    mainWindow.focus();
+                }
+                try {
+                    resolve(JSON.parse(data));
+                } catch (e) {
+                    reject(new Error(data));
+                }
+            });
+        });
+
+        req.on('error', (err) => {
+            if (mainWindow) {
+                mainWindow.show();
+                mainWindow.focus();
+            }
+            reject(err);
+        });
+        req.write(JSON.stringify({}));
+        req.end();
+    });
+});
+
 ipcMain.handle('get-history', async () => {
     return new Promise((resolve, reject) => {
         http.get(`${API_BASE}/api/history`, (res) => {

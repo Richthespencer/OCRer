@@ -1,6 +1,7 @@
 import asyncio
 import subprocess
 import platform
+import uuid
 from io import BytesIO
 from contextlib import asynccontextmanager
 from fastapi import FastAPI, HTTPException
@@ -13,8 +14,10 @@ from ocr_service import recognize_text
 from paddleocr_service import recognize_text_paddleocr
 from shortcut_handler import shortcut_handler, take_screenshot
 from history_manager import history
+from task_manager import task_manager
 
 latest_result = {"text": "", "timestamp": 0, "processing": False}
+current_task_id = None
 
 
 @asynccontextmanager
@@ -196,6 +199,11 @@ def create_test_image() -> bytes:
 
 @app.post("/api/test-ocr")
 async def test_ocr():
+    global current_task_id
+    task_id = str(uuid.uuid4())
+    current_task_id = task_id
+    task_manager.create_task(task_id)
+    
     try:
         provider = config.get("ocr_provider", "siliconflow")
 
@@ -218,26 +226,66 @@ async def test_ocr():
             pass
         
         if not image_bytes:
+            task_manager.complete_task(task_id, error="截图已取消")
+            current_task_id = None
             return {
                 "success": False,
-                "message": "截图已取消"
+                "message": "截图已取消",
+                "task_id": task_id
             }
 
-        result = await do_ocr(image_bytes)
+        # 检查是否已取消
+        if task_manager.is_cancelled(task_id):
+            # 后台继续执行，但不等待结果
+            asyncio.create_task(_background_ocr(task_id, image_bytes, provider))
+            current_task_id = None
+            return {
+                "success": False,
+                "message": "已取消，任务在后台继续",
+                "task_id": task_id
+            }
 
+        # 设置30秒超时
+        try:
+            result = await asyncio.wait_for(do_ocr(image_bytes), timeout=30.0)
+        except asyncio.TimeoutError:
+            # 超时后转为后台任务
+            asyncio.create_task(_background_ocr(task_id, image_bytes, provider))
+            current_task_id = None
+            return {
+                "success": False,
+                "message": "识别超时，任务在后台继续",
+                "task_id": task_id
+            }
+
+        # 检查是否已取消
+        if task_manager.is_cancelled(task_id):
+            task_manager.complete_task(task_id, result=result)
+            history.add(result, provider)
+            current_task_id = None
+            return {
+                "success": False,
+                "message": "已取消",
+                "task_id": task_id
+            }
+
+        task_manager.complete_task(task_id, result=result)
         history.add(result, provider)
 
         if config.get("auto_copy_to_clipboard", True):
             copy_to_clipboard(result)
 
+        current_task_id = None
         return {
             "success": True,
             "provider": provider,
             "text": result,
-            "message": "识别完成，结果已复制到剪贴板"
+            "message": "识别完成，结果已复制到剪贴板",
+            "task_id": task_id
         }
     except ValueError as e:
-        # 出错时也显示窗口
+        task_manager.complete_task(task_id, error=str(e))
+        current_task_id = None
         try:
             import requests
             requests.post("http://127.0.0.1:51235/show", timeout=1)
@@ -246,10 +294,12 @@ async def test_ocr():
         return {
             "success": False,
             "error": str(e),
-            "message": f"配置错误: {str(e)}"
+            "message": f"配置错误: {str(e)}",
+            "task_id": task_id
         }
     except Exception as e:
-        # 出错时也显示窗口
+        task_manager.complete_task(task_id, error=str(e))
+        current_task_id = None
         try:
             import requests
             requests.post("http://127.0.0.1:51235/show", timeout=1)
@@ -258,8 +308,36 @@ async def test_ocr():
         return {
             "success": False,
             "error": str(e),
-            "message": f"识别失败: {str(e)}"
+            "message": f"识别失败: {str(e)}",
+            "task_id": task_id
         }
+
+
+async def _background_ocr(task_id: str, image_bytes: bytes, provider: str):
+    try:
+        result = await asyncio.wait_for(do_ocr(image_bytes), timeout=30.0)
+        if not task_manager.is_cancelled(task_id):
+            task_manager.complete_task(task_id, result=result)
+            history.add(result, provider)
+            if config.get("show_notification", True):
+                show_notification("OCRer", "后台识别完成，结果已保存到历史记录")
+    except Exception as e:
+        task_manager.complete_task(task_id, error=str(e))
+
+
+@app.post("/api/cancel-ocr")
+async def cancel_ocr():
+    global current_task_id
+    if current_task_id:
+        task_manager.cancel_task(current_task_id)
+        try:
+            import requests
+            requests.post("http://127.0.0.1:51235/show", timeout=1)
+        except:
+            pass
+        # 不立即清除current_task_id，让后台任务继续
+        return {"success": True, "message": "已取消，任务在后台继续"}
+    return {"success": False, "message": "没有进行中的任务"}
 
 
 if __name__ == "__main__":

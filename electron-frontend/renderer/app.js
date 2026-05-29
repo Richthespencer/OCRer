@@ -7,6 +7,7 @@ const elements = {
     status: document.getElementById('status'),
     autoCopy: document.getElementById('auto_copy'),
     captureBtn: document.getElementById('capture-btn'),
+    cancelBtn: document.getElementById('cancel-btn'),
     clearBtn: document.getElementById('clear-btn'),
     copyBtn: document.getElementById('copy-btn'),
     toggleRender: document.getElementById('toggle-render'),
@@ -202,10 +203,13 @@ async function testOCR() {
 async function captureOCR() {
     elements.captureBtn.disabled = true;
     elements.captureBtn.textContent = '截图中...';
+    elements.cancelBtn.classList.remove('hidden');
     showStatus('请框选要识别的区域...', 'info');
 
     try {
         const result = await api.testOCR();
+
+        elements.cancelBtn.classList.add('hidden');
 
         if (result.success) {
             setOutputText(result.text);
@@ -216,10 +220,22 @@ async function captureOCR() {
             showStatus(result.message || '识别失败', 'error');
         }
     } catch (err) {
+        elements.cancelBtn.classList.add('hidden');
         showStatus('识别失败: ' + err.message, 'error');
     } finally {
         elements.captureBtn.disabled = false;
         elements.captureBtn.textContent = '开始截图';
+    }
+}
+
+// 取消OCR
+async function cancelOCR() {
+    try {
+        const result = await api.cancelOCR();
+        elements.cancelBtn.classList.add('hidden');
+        showStatus(result.message || '已取消', 'info');
+    } catch (err) {
+        showStatus('取消失败: ' + err.message, 'error');
     }
 }
 
@@ -445,6 +461,7 @@ document.addEventListener('keyup', (e) => {
 
 // 主页面事件
 elements.captureBtn.addEventListener('click', captureOCR);
+elements.cancelBtn.addEventListener('click', cancelOCR);
 elements.clearBtn.addEventListener('click', clearOutput);
 elements.copyBtn.addEventListener('click', copyToClipboard);
 elements.toggleRender.addEventListener('click', toggleRender);
