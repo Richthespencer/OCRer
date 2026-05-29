@@ -58,3 +58,4 @@ cd electron-frontend && npm install
 - Markdown rendering uses `marked` + `katex` with custom inline/block LaTeX extensions
 - Copy always copies raw markdown text, never rendered HTML
 - `config.json` and `history.json` are in `.gitignore` — never commit secrets
+- Do NOT push to remote after every change — only push when explicitly asked

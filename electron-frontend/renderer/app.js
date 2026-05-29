@@ -118,10 +118,10 @@ async function loadConfig() {
         elements.model.value = config.model || 'deepseek-ai/DeepSeek-OCR';
         elements.paddleocrApiUrl.value = config.paddleocr_api_url || 'https://paddleocr.aistudio-app.com/api/v2/ocr/jobs';
         elements.paddleocrToken.value = config.paddleocr_token || '';
-        elements.paddleocrModel.value = config.paddleocr_model || 'PaddleOCR-VL-1.5';
+        elements.paddleocrModel.value = config.paddleocr_model || 'PaddleOCR-VL-1.6';
         elements.shortcutKey.value = config.shortcut_key || 'cmd+shift+o';
         elements.showNotification.checked = config.show_notification !== false;
-        elements.ocrPrompt.value = config.ocr_prompt || '请识别图片中的所有文字，直接返回识别结果，不要添加任何额外说明';
+        elements.ocrPrompt.value = config.ocr_prompt || 'Convert the document to markdown format. Preserve mathematical formulas in LaTeX notation using $ for inline and $$ for block formulas. Do not include bounding boxes or layout annotations.';
 
         toggleProviderConfig();
     } catch (err) {

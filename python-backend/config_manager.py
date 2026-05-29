@@ -11,7 +11,7 @@ DEFAULT_CONFIG = {
     "auto_copy_to_clipboard": True,
     "show_notification": True,
     "api_base_url": "https://api.siliconflow.cn/v1",
-    "ocr_prompt": "请识别图片中的所有文字，直接返回识别结果，不要添加任何额外说明",
+    "ocr_prompt": "Convert the document to markdown format. Preserve mathematical formulas in LaTeX notation using $ for inline and $$ for block formulas. Do not include bounding boxes or layout annotations.",
     "paddleocr_api_url": "https://paddleocr.aistudio-app.com/api/v2/ocr/jobs",
     "paddleocr_token": "",
     "paddleocr_model": "PaddleOCR-VL-1.6",
