@@ -241,7 +241,7 @@ ipcMain.handle('update-config', async (event, config) => {
 });
 
 ipcMain.handle('test-ocr', async () => {
-    // 按钮截图：隐藏窗口，截图后显示
+    // 按钮截图：隐藏窗口
     if (mainWindow) {
         mainWindow.hide();
         await new Promise(resolve => setTimeout(resolve, 200));
@@ -258,11 +258,6 @@ ipcMain.handle('test-ocr', async () => {
             let data = '';
             res.on('data', chunk => data += chunk);
             res.on('end', () => {
-                // 确保窗口显示
-                if (mainWindow) {
-                    mainWindow.show();
-                    mainWindow.focus();
-                }
                 try {
                     resolve(JSON.parse(data));
                 } catch (e) {
@@ -272,22 +267,7 @@ ipcMain.handle('test-ocr', async () => {
         });
 
         req.on('error', (err) => {
-            // 确保窗口显示
-            if (mainWindow) {
-                mainWindow.show();
-                mainWindow.focus();
-            }
             reject(err);
-        });
-        
-        // 设置超时，确保窗口会显示
-        req.setTimeout(30000, () => {
-            req.destroy();
-            if (mainWindow) {
-                mainWindow.show();
-                mainWindow.focus();
-            }
-            reject(new Error('Request timeout'));
         });
         
         req.write(JSON.stringify({}));

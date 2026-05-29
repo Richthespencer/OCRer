@@ -231,6 +231,14 @@ async def test_ocr():
                 raise ValueError("SiliconFlow API key not configured")
 
         image_bytes = take_screenshot()
+        
+        # 截图完成后，通知前端显示窗口
+        try:
+            import requests
+            requests.post("http://127.0.0.1:51235/show", timeout=1)
+        except:
+            pass
+        
         if not image_bytes:
             return {
                 "success": False,
@@ -251,12 +259,24 @@ async def test_ocr():
             "message": "识别完成，结果已复制到剪贴板"
         }
     except ValueError as e:
+        # 出错时也显示窗口
+        try:
+            import requests
+            requests.post("http://127.0.0.1:51235/show", timeout=1)
+        except:
+            pass
         return {
             "success": False,
             "error": str(e),
             "message": f"配置错误: {str(e)}"
         }
     except Exception as e:
+        # 出错时也显示窗口
+        try:
+            import requests
+            requests.post("http://127.0.0.1:51235/show", timeout=1)
+        except:
+            pass
         return {
             "success": False,
             "error": str(e),
