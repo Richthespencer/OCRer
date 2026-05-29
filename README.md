@@ -1,5 +1,9 @@
 # OCRer
 
+<p align="center">
+  <img src="assets/icon.png" width="128" height="128" alt="OCRer Icon">
+</p>
+
 截图 OCR 工具，支持硅基流动和 PaddleOCR。
 
 ## 功能
