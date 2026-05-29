@@ -42,7 +42,10 @@
           "target": "dmg",
           "arch": ["arm64", "x64"]
         }
-      ]
+      ],
+      "hardenedRuntime": false,
+      "entitlements": "entitlements.mac.plist",
+      "entitlementsInherit": "entitlements.mac.plist"
     },
     "dmg": {
       "contents": [
