@@ -2,6 +2,7 @@ const { app, BrowserWindow, ipcMain, Tray, Menu, nativeImage } = require('electr
 const path = require('path');
 const { spawn } = require('child_process');
 const http = require('http');
+const fs = require('fs');
 
 let mainWindow;
 let tray;
@@ -19,6 +20,15 @@ function isBackendRunning(callback) {
     });
 }
 
+function getPythonBackendPath() {
+    // 开发模式
+    if (app.isPackaged === false) {
+        return path.join(__dirname, '..', 'python-backend', 'main.py');
+    }
+    // 打包后的模式
+    return path.join(process.resourcesPath, 'ocrer-backend', 'ocrer-backend');
+}
+
 function startPythonBackend() {
     isBackendRunning((running) => {
         if (running) {
@@ -26,10 +36,20 @@ function startPythonBackend() {
             return;
         }
 
-        const pythonPath = path.join(__dirname, '..', 'python-backend', 'main.py');
-        pythonProcess = spawn('python3', [pythonPath], {
-            stdio: ['pipe', 'pipe', 'pipe']
-        });
+        const backendPath = getPythonBackendPath();
+        console.log(`Starting backend from: ${backendPath}`);
+
+        if (app.isPackaged === false) {
+            // 开发模式：使用python3运行
+            pythonProcess = spawn('python3', [backendPath], {
+                stdio: ['pipe', 'pipe', 'pipe']
+            });
+        } else {
+            // 打包模式：直接运行可执行文件
+            pythonProcess = spawn(backendPath, [], {
+                stdio: ['pipe', 'pipe', 'pipe']
+            });
+        }
 
         pythonProcess.stdout.on('data', (data) => {
             console.log(`Python stdout: ${data}`);

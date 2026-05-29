@@ -11,6 +11,10 @@ build/
 node_modules/
 package-lock.json
 
+# Electron build
+electron-frontend/dist/
+electron-frontend/build/
+
 # Config with secrets
 config.json
 
