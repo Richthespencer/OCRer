@@ -86,42 +86,22 @@ def setup_shortcut():
         try:
             latest_result = {"text": latest_result.get("text", ""), "timestamp": latest_result.get("timestamp", 0), "processing": True}
 
-            # 检查窗口状态
-            window_was_visible = False
+            # 检查窗口状态，如果窗口是显示的，隐藏它
             try:
                 import requests
                 resp = requests.get("http://127.0.0.1:51235/status", timeout=1)
                 status = resp.json().get("status", "hidden")
-                window_was_visible = (status == "visible")
-            except:
-                pass
-
-            # 如果窗口是显示的，隐藏它
-            if window_was_visible:
-                try:
+                if status == "visible":
                     requests.post("http://127.0.0.1:51235/hide", timeout=1)
                     import time
                     time.sleep(0.3)
-                except:
-                    pass
+            except:
+                pass
 
             image_bytes = take_screenshot()
             if not image_bytes:
-                # 如果窗口之前是显示的，恢复显示
-                if window_was_visible:
-                    try:
-                        requests.post("http://127.0.0.1:51235/show", timeout=1)
-                    except:
-                        pass
                 latest_result["processing"] = False
                 return
-
-            # 如果窗口之前是显示的，恢复显示
-            if window_was_visible:
-                try:
-                    requests.post("http://127.0.0.1:51235/show", timeout=1)
-                except:
-                    pass
 
             loop = asyncio.new_event_loop()
             result = loop.run_until_complete(do_ocr(image_bytes))
