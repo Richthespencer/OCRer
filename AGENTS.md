@@ -21,8 +21,12 @@ python-backend/
 electron-frontend/
   main.js              # Electron main process, IPC handlers, polling loop
   preload.js           # contextBridge API exposure
+  icon.png             # App icon for window and tray
   renderer/app.js      # UI logic, page switching, markdown rendering
   renderer/index.html  # Three pages: main, history, settings
+
+assets/
+  icon.png             # App icon for README display
 ```
 
 ## Commands
